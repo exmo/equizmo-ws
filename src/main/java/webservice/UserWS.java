@@ -33,10 +33,10 @@ public class UserWS {
 		return bc.addPoints(email, points);
 	}		
 	
-	@WebMethod
-	public int ranking(@WebParam(name="email") String email){
-		return bc.ranking(email);
-	}
+//	@WebMethod
+//	public int ranking(@WebParam(name="email") String email){
+//		return bc.ranking(email);
+//	}
 	
 	@WebMethod
 	@WebResult(name="user", partName="users")
