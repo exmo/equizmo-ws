@@ -1,6 +1,7 @@
 package webservice;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.jws.WebMethod;
@@ -35,5 +36,10 @@ public class UserWS {
 	@WebMethod
 	public int ranking(@WebParam(name="email") String email){
 		return bc.ranking(email);
-	}		
+	}
+	
+	@WebMethod
+	public List<User> ranking(@WebParam(name="offset") Integer offset){
+		return bc.ranking(offset);
+	}
 }
