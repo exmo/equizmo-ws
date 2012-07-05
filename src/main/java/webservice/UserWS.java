@@ -39,6 +39,7 @@ public class UserWS {
 	}
 	
 	@WebMethod
+	@WebResult(name="user", partName="users")
 	public List<User> ranking(@WebParam(name="offset") Integer offset){
 		return bc.ranking(offset);
 	}
