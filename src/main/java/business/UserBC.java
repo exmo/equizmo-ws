@@ -54,4 +54,8 @@ public class UserBC {
     public void clear() {
     	dao.clear();
     }
+    
+    public void refresh() {
+    	dao.loadUsers();
+    }    
 }
