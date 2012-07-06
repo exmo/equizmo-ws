@@ -21,7 +21,7 @@ public class QuizDAO {
 				.readRemote("http://exmo.github.com/equizmo/quiz.xml");
 
 		HashMap<String, Class> aliases = new HashMap<String, Class>();
-		aliases.put("quizes", List.class);
+		aliases.put("quizzes", List.class);
 		aliases.put("quiz", Quiz.class);
 		aliases.put("question", Question.class);
 		aliases.put("proposition", String.class);
