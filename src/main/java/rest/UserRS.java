@@ -44,6 +44,12 @@ public class UserRS {
 		return response;
 	}	
 	
+	@GET
+	@Path("/refresh")
+	public void refresh() {
+		bc.refresh();
+	}
+	
 	public class  RankingResponse{
 		private List<User> users;
 
