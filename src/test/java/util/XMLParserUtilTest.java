@@ -31,12 +31,12 @@ public class XMLParserUtilTest {
 		quizList.add(quiz2);
 		
 		aliases = new HashMap<String, Class>();
-		aliases.put("quizes", List.class);
+		aliases.put("quizzes", List.class);
 		aliases.put("quiz", Quiz.class);
 		aliases.put("question", Question.class);
 		aliases.put("proposition", String.class);
 		 
-		xml = "<?xml version=\"1.0\" ?><quizes><quiz><category>c1</category><questions>" + 
+		xml = "<?xml version=\"1.0\" ?><quizzes><quiz><category>c1</category><questions>" + 
 				"<question><enunciation>q1</enunciation><propositions>" + 
 				"<proposition>o1</proposition><proposition>o2</proposition><proposition>o3</proposition></propositions>" +
 				"<answer>0</answer></question>" + 
@@ -45,7 +45,7 @@ public class XMLParserUtilTest {
 				"<answer>1</answer></question></questions></quiz>" +
 				"<quiz><category>c2</category><questions><question><enunciation>q2</enunciation><propositions>" +
 				"<proposition>l1</proposition><proposition>l2</proposition><proposition>l3</proposition></propositions>" +
-				"<answer>2</answer></question></questions></quiz></quizes>";
+				"<answer>2</answer></question></questions></quiz></quizzes>";
 	}
 	
 	@Test 
