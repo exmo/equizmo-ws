@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:fb="https://www.facebook.com/2008/fbml">
+<head>
+<title>.:: Exmo/Quiz ::.</title>
+	<meta charset="utf-8" />
+
+	<script type="text/javascript" src="js/jquery-1.9.0.min.js"></script>
+	<script src="js/jquery-ui-1.10.0.custom.min.js"></script>
+	<script src="js/facebook.all.js"></script>
+	
+	<link href="css/default.css" type="text/css" rel="stylesheet" />
+	<link href="css/custom-theme/jquery-ui-1.10.0.custom.css" rel="stylesheet">
+	
+</head>
+
+<header id="banner" class="body"> 
+	<h1 align="center">
+		<img src="images/logo_inicial.png" alt="eQu?zMo" width="300px" height="63px"/>
+	</h1>
+</header>
+
+<body>
+
+<div id="loading" align="center">
+	Carregando...
+	<img id="pinguim" src="images/pinguim.gif" />
+</div>
+
+<div id="telaInicial" align="center">
+	<div id="jogador" class="ui-widget">
+		<table>
+			<tr>
+				<td><h4 id="nome">nome</h4></td>
+			    <td><h4 id="pontos">###</h4></td>
+			</tr>
+		</table>
+	</div>
+	<p id="jogar" align="center">
+		<img id="btnJogar" src="images/botao_jogar.png" width="240px" height="32px" />
+		<br />
+		<button id="btnConvidar" class="resposta" style="width: 240px; height: 32px;">
+			Desafiar amigos
+		</button>
+	</p>
+	<div id="ranking" class="ui-widget">
+		<h2>Ranking</h2>
+		<div id="rankingList"></div>
+	</div>
+</div>
+
+<div id="telaCategoria" align="center">
+	<h2>Selecionar categoria</h2>
+	<div id="categoriaList"></div>
+</div>
+
+<div id="telaPergunta" align="center">
+	<h2 id="categoria"></h2>
+	<table style="width: 420px;">
+		<tr>
+			<td id="textoPergunta" width="80%"></td>
+			<td id="numeroPergunta"></td>
+		</tr>
+	</table>
+	<div id="alternativasList"></div>
+</div>
+
+
+<div id="fb-root"></div>
+  <script>
+
+	var APP_ID = '229599823842254';
+	var FIRST_PAGE = 'https://apps.facebook.com/equizmo/';
+	var DOMAIN = 'https://quiz-exmo.rhcloud.com/';
+
+	var PONTOS = 0;
+	var PONTUACAO = 0;
+	var INDICE_PERGUNTA = -1;
+	
+	var uid = '';
+    var accessToken = '';
+	var email ='';
+	var nome ='';
+	var longitude=10;
+	var latitude=10;
+	var categoria = '';
+
+	var objetoPerguntas;
+	
+	console.log(DOMAIN);
+	  
+    $(function(){
+
+      esconderTelas();	
+      
+      FB.init({ apiKey: APP_ID,
+        channelUrl : DOMAIN+'/facebook/channel.html',
+        status     : true, // check login status
+        cookie     : true, // enable cookies to allow the server to access the session
+        xfbml      : true,  // parse XFBML
+        frictionlessRequests: true
+      });
+      
+      FB.getLoginStatus(function(response) {
+    	  console.log(response);
+    	  if (response.status === 'connected') {
+              uid = response.authResponse.userID;
+              accessToken = response.authResponse.accessToken;
+
+              userInfo();
+              
+              console.log('connected and allowed');
+          } else if (response.status === 'not_authorized') {
+              console.log('connected but not allowed');
+              top.location.href = "https://www.facebook.com/dialog/oauth?client_id="+APP_ID+"&redirect_uri="+FIRST_PAGE+"&scope=email, user_about_me, publish_stream, publish_actions, manage_notifications";
+          } else {
+              console.log('isnt even logged in to Facebook');
+              top.location.href = "https://www.facebook.com/dialog/oauth?client_id="+APP_ID+"&redirect_uri="+FIRST_PAGE+"+&scope=email, user_about_me, publish_stream, publish_actions, manage_notifications";
+          }
+      });
+
+	  	$('#btnJogar').click(function(){
+		 	carregarCategorias();
+	   	});
+
+	  	$('#btnConvidar').click(function(){
+	  		FB.ui({ method: 'apprequests', 
+	  	       message: 'Vamos exercitar a mente!'});		  
+		});
+      
+    });
+
+    function userInfo(){
+    	console.log('Getting user info ('+uid+')');
+        FB.api('/'+uid, function(r) {
+        	console.log(r);
+        	name = r.name;
+        	email = r.email;
+        	
+			$("#nome").text(name);	
+
+			loginOnQuiz();	
+			carregarRanking();		           
+		});
+		
+    }
+
+    /* Logando no Quiz usando SOAP */
+    function loginOnQuiz(){
+		var soapMessage = "";
+		soapMessage+="<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice/\">";
+		soapMessage+="<soapenv:Header></soapenv:Header>";
+		soapMessage+="<soapenv:Body>"
+		soapMessage+="  <web:login>";
+		soapMessage+="    <name>"+name+"</name>";
+		soapMessage+="    <email>"+email+"</email>";
+		soapMessage+="    <latitude>"+latitude+"</latitude>";
+		soapMessage+="    <longitude>"+longitude+"</longitude>";
+		soapMessage+="  </web:login>";
+		soapMessage+="</soapenv:Body>";
+		soapMessage+="</soapenv:Envelope>";
+
+		console.log(soapMessage);
+		$.ajax({
+			url: "/user",
+			type: "POST",
+			dataType: "xml",
+			data: soapMessage,
+			complete: function(xmlHttpRequest, status){
+				console.log(status);
+				xml = xmlHttpRequest.responseText;
+				xmlDoc = $.parseXML( xml ),
+			    $xml = $( xmlDoc ),
+			    PONTOS = parseInt($xml.find("return").text());
+				$("#pontos").text(PONTOS);
+		
+			},
+			SOAPAction: "login",
+			contentType: "text/xml; charset=\"utf-8\""
+		});
+    }
+
+    function carregarRanking(){
+        $.ajax(DOMAIN+'/rest/user/ranking/99', {
+            dataType: 'json',
+            success: function (data) {
+            	console.log(data);
+				$('#rankingList').empty();
+				$.each(data.users, function(i,user) {
+					$('#rankingList').append('<p>'+i+' - '+user.name+' ('+user.points+')</p>');
+				});
+				exibir('#telaInicial');
+            }
+        });
+        
+    }
+
+    function carregarCategorias(){
+        esconderTelas();
+    	$('#loading').show();
+        $.ajax(DOMAIN+'/rest/quiz/listCategories', {
+            dataType: 'json',
+            success: function (data) {
+            	console.log(data);
+            	$('#categoriaList').empty();
+				$.each(data, function(i,categoria) {
+					$('#categoriaList').append('<p><a href="javascript:carregarPerguntas(\''+categoria+'\');">'+categoria+'</a></p>');
+				});
+				exibir('#telaCategoria');
+            }
+        });
+        
+    }
+    
+	function exibir(tela){
+		$('#loading').hide();
+		esconderTelas();
+		$(tela).show();
+	}
+
+	function esconderTelas(){
+		$('#telaInicial').hide();
+		$('#telaCategoria').hide();
+		$('#telaPergunta').hide();
+	}
+
+	function carregarPerguntas(cat){
+		categoria = cat;
+		esconderTelas();
+    	$('#loading').show();
+        $.ajax(DOMAIN+'rest/quiz/get/'+cat, {
+            dataType: 'json',
+            success: function (data) {
+            	console.log(data);
+            	objetoPerguntas = data;
+            	PONTUACAO = 0;
+				exibir('#telaPergunta');
+				exibirProximaPergunta();
+            }
+        });
+    }
+
+    function exibirProximaPergunta(){
+    	INDICE_PERGUNTA = INDICE_PERGUNTA+1;
+    	if(objetoPerguntas.questions.length>INDICE_PERGUNTA){
+			questao = objetoPerguntas.questions[INDICE_PERGUNTA];
+			$("#categoria").text(objetoPerguntas.category);
+			$("#textoPergunta").text(questao.enunciation);
+			$("#numeroPergunta").text(INDICE_PERGUNTA+1+" de "+objetoPerguntas.questions.length);
+			$('#alternativasList').empty();
+			$.each(questao.propositions, function(i,p) {
+				id = INDICE_PERGUNTA+"_"+i;
+				button = "<button id=\""+id+"\" class=\"resposta\" onclick=\"javascript:responderPergunta("+INDICE_PERGUNTA+","+i+");\">"+p+"</button>";
+				$('#alternativasList').append('<p> '+button+'</p>');
+			});
+    	}else{
+        	//Resultado
+        	enviarResultado();
+        }
+    }
+
+    function responderPergunta(perguntaID, respostaID){
+		button = $("#"+perguntaID+"_"+respostaID);
+    	console.log(button);
+    	
+		if(objetoPerguntas.questions[perguntaID].answer==respostaID){
+			PONTUACAO+=120;
+			button.bgcolor='#00FF00';
+		}else{
+			button.bgcolor='#FF0000';
+		}
+		setTimeout(exibirProximaPergunta(), 600);
+    }
+
+    function enviarResultado(){
+    	esconderTelas();
+    	$('#loading').show();
+        $.ajax(DOMAIN+'rest/user/addPoints/'+email+'/'+PONTUACAO, {
+            dataType: 'json',
+            success: function (data) {
+            	console.log(data);
+            	PONTOS+=PONTUACAO;
+            	$("#pontos").text(PONTOS);
+            	carregarRanking();
+
+				scoreMessage = 'Acabei de fazer '+PONTUACAO+' pontos no eQu?zMo! Consegue me superar?'
+            	
+            	FB.ui({ method: 'feed', 
+                    message: scoreMessage,
+                    description: scoreMessage,
+                    caption: FIRST_PAGE,
+                    link: FIRST_PAGE
+                });
+            	
+				// Zera tudo!
+            	PONTUACAO = 0;
+            	INDICE_PERGUNTA = -1;
+            }
+        });
+    }
+    
+  </script>
+</body>
+</html>

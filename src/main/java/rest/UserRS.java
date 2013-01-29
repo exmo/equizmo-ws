@@ -2,6 +2,7 @@ package rest;
 
 import java.util.List;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,6 +13,7 @@ import business.UserBC;
 import entity.User;
 
 @Path("/user")
+@RequestScoped
 public class UserRS {
 
 	@Inject 
@@ -26,6 +28,7 @@ public class UserRS {
 		return response;
 	}	
 	
+	
 	@GET
 	@Path("/ranking/{offset}")
 	@Produces("application/json")
@@ -38,7 +41,7 @@ public class UserRS {
 	@GET
 	@Path("/ranking")
 	@Produces("application/json")
-	public RankingResponse ranking() {
+	public RankingResponse rankingCompleto() {
 		RankingResponse response = new RankingResponse();
 		response.setUsers(bc.ranking());
 		return response;

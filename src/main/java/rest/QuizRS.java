@@ -2,6 +2,7 @@ package rest;
 
 import java.util.List;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,6 +13,7 @@ import business.QuizBC;
 import entity.Quiz;
 
 @Path("/quiz")
+@RequestScoped
 public class QuizRS {
 	@Inject 
 	QuizBC bc;
